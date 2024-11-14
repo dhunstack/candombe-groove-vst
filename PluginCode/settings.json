@@ -1,0 +1,166 @@
+{
+    "needs_audio": false,
+    "UI": {
+        "resizable": true,
+        "maintain_aspect_ratio": false,
+        "width": 800,
+        "height": 500,
+
+        "Tabs": {
+            "show_grid": false,
+            "draw_borders_for_components": false,
+            "tabList": [
+                {
+                    "name": "Humanize",
+                    "MidiDisplays": [
+                        {
+                            "label": "MIDI_In",
+                            "useSameColorForAllVoices": true,
+                            "topLeftCorner": "Ab",
+                            "bottomRightCorner": "Zj",
+                            "allowToDragOutAsMidi": false,
+                            "allowToDragInMidi": true,
+                            "needsPlayhead": false,
+                            "info": "Quantized MIDI input",
+                            "custom_voices": ["Chico","Piano", "Repique"],
+                            "custom_pitches": [36, 38, 40],
+                            "show_grid": true
+                        },
+                        {
+                            "label": "MIDI_Out",
+                            "useSameColorForAllVoices": true,
+                            "topLeftCorner": "Ao",
+                            "bottomRightCorner": "Zy",
+                            "allowToDragOutAsMidi": true,
+                            "allowToDragInMidi": false,
+                            "needsPlayhead": false,
+                            "info": "Humanized MIDI output",
+                            "custom_voices": ["Chico","Piano", "Repique"],
+                            "custom_pitches": [36, 38, 40],
+                            "show_grid": true
+                        }
+                    ],
+                    "labels": [
+                        {
+                            "label": "Drag/Drop MIDI Files Here",
+                            "topLeftCorner": "Aa",
+                            "bottomRightCorner": "Gb",
+                            "font_size": 16
+                        },
+                        {
+                            "label": "Drag out Humanized MIDI",
+                            "topLeftCorner": "Ay",
+                            "bottomRightCorner": "Gz",
+                            "font_size": 16
+                        }
+                    ],
+                    "buttons": [
+                        {
+                            "label": "Humanize!!",
+                            "topLeftCorner": "Kk",
+                            "bottomRightCorner": "Pn",
+                            "show_label": true,
+                            "isToggle": true,
+                            "default": 0,
+                            "info": "Press to humanize the MIDI input"
+                        }
+                    ]
+                },
+                {
+                    "name": "Midi Mappings",
+                    "rotaries": [
+                        {
+                            "label": "Chico",
+                            "min": 0,
+                            "max": 127,
+                            "default": 36,
+                            "topLeftCorner": "Cc",
+                            "bottomRightCorner": "Gi",
+                            "show_label": true,
+                            "is_int": true
+                        },
+                        {
+                            "label": "Piano",
+                            "min": 0,
+                            "max": 127,
+                            "default": 38,
+                            "topLeftCorner": "Hc",
+                            "bottomRightCorner": "Li",
+                            "show_label": true,
+                            "is_int": true
+                        },
+                        {
+                            "label": "Repique",
+                            "min": 0,
+                            "max": 127,
+                            "default": 40,
+                            "topLeftCorner": "Pc",
+                            "bottomRightCorner": "Ti",
+                            "show_label": true,
+                            "is_int": true
+                        }
+                    ]
+                }
+            ]
+        },
+
+        "MidiInVisualizer": {
+            "enable": false,
+            "allowToDragInMidi": false,
+            "visualizeIncomingMidiFromHost": true,
+            "deletePreviousIncomingMidiMessagesOnBackwardPlayhead": true,
+            "deletePreviousIncomingMidiMessagesOnRestart": true
+        },
+
+        "GeneratedContentVisualizer": {
+            "enable": true,
+            "allowToDragOutAsMidi": true
+        }
+
+    },
+
+    "StandaloneTransportPanel": {
+        "enable": true,
+        "disableInPluginMode": true,
+        "exclude_tempo_from_presets": true,
+        "exclude_time_signature_from_presets": true,
+        "exclude_record_button_from_presets": true,
+        "exclude_play_button_from_presets": true
+    },
+
+    "VirtualMidiOut": {
+        "enable": false
+    },
+
+    "event_communication_settings": {
+        "SendEventAtBeginningOfNewBuffers_FLAG": true,
+        "SendEventForNewBufferIfMetadataChanged_FLAG": false,
+        "SendNewBarEvents_FLAG": false,
+        "SendTimeShiftEvents_FLAG": false,
+        "delta_TimeShiftEventRatioOfQuarterNote": 0.5,
+        "FilterNoteOnEvents_FLAG": false,
+        "FilterNoteOffEvents_FLAG": false,
+        "FilterCCEvents_FLAG": false
+    },
+
+    "deploy_method_min_wait_time_between_iterations": 0.5,
+
+    "debugging_settings": {
+        "DeploymentThread": {
+            "print_received_gui_params": false,
+            "print_manually_dropped_midi_messages": false,
+            "print_input_events": false,
+            "print_deploy_method_time": false,
+            "disable_user_print_requests": false
+        },
+        "ProcessorThread": {
+            "print_start_stop_times": false,
+            "print_new_buffer_started": false,
+            "print_generation_policy_reception": false,
+            "print_generation_stream_reception": false,
+            "disableAllPrints": false
+        }
+    }
+
+}
+

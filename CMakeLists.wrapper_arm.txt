@@ -1,0 +1,288 @@
+
+# ==============================================================================
+target_sources(${BaseTargetName} PRIVATE
+        ../shared_plugin_helpers/shared_plugin_helpers.cpp
+        ../Source/NeuralMidiFXPlugin/PluginProcessor.cpp
+        ../Source/NeuralMidiFXPlugin/processBlock.cpp
+        ../Source/NeuralMidiFXPlugin/PluginEditor.cpp
+        ../Source/DeploymentThreads/DeploymentThread.cpp
+        ../Source/Includes/colored_cout.cpp
+        deploy.h
+        settings.json
+        )
+
+
+
+# ---------------------------------------------
+# ------------ Torch Installation -------------
+# ---------------------------------------------
+
+set(TORCH_VERSION 2.2.1)
+
+# Libtorch Installation Path for Windows and MacOS
+if(MSVC)
+    set(LIBTORCH_INSTALL_DIR "C:/libtorch-${TORCH_VERSION}-${CMAKE_BUILD_TYPE}")
+    find_package(Torch HINTS ${LIBTORCH_INSTALL_DIR})
+else()
+    set(LIBTORCH_INSTALL_DIR "$ENV{HOME}/Library/libtorch-${TORCH_VERSION}-${CMAKE_BUILD_TYPE}")
+    find_package(Torch HINTS "${LIBTORCH_INSTALL_DIR}/libtorch")
+endif()
+
+if(APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+    # For Apple ARM, specify the local paths directly without downloading
+    message(STATUS "Using local libtorch for Apple ARM.")
+    set(TORCH_INCLUDE_DIRS "$ENV{HOME}/Library/") # Adjust if your headers are located elsewhere
+    set(TORCH_LIBRARIES
+        "$ENV{HOME}/Library/libc10.dylib"
+        "$ENV{HOME}/Library/libtorch_cpu.dylib"
+        "$ENV{HOME}/Library/libtorch.dylib"
+        "$ENV{HOME}/Library/libtorch_global_deps.dylib")
+
+endif()
+if(NOT Torch_FOUND)
+
+    # Check if we're running on Windows
+    if(MSVC)
+
+        # if directory exists, delete it
+        if(EXISTS ${LIBTORCH_INSTALL_DIR})
+            message(STATUS "Deleting existing libtorch directory...")
+            file(REMOVE_RECURSE ${LIBTORCH_INSTALL_DIR})
+        endif()
+
+        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            message(STATUS "Downloading libtorch (DEBUG) for Windows...")
+            set(TORCH_FILE libtorch-win-shared-with-deps-debug-${TORCH_VERSION}%2Bcpu.zip)
+        else()
+            message(STATUS "Downloading libtorch (RELEASE) for Windows...")
+            set(TORCH_FILE libtorch-win-shared-with-deps-${TORCH_VERSION}%2Bcpu.zip)
+        endif()
+
+        file(DOWNLOAD
+                https://download.pytorch.org/libtorch/cpu/${TORCH_FILE}
+                ${CMAKE_BINARY_DIR}/${TORCH_FILE}
+                SHOW_PROGRESS
+                )
+
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf ${CMAKE_BINARY_DIR}/${TORCH_FILE}
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                )
+
+        # Move the extracted libtorch directory to the desired location
+        file(RENAME ${CMAKE_BINARY_DIR}/libtorch ${LIBTORCH_INSTALL_DIR})
+
+            set(Torch_DIR ${LIBTORCH_INSTALL_DIR}/libtorch/share/cmake/Torch)
+        find_package(Torch REQUIRED)
+
+        # Add Torch to the include directories
+        include_directories(${TORCH_INCLUDE_DIRS})
+
+        # Add Torch libraries to the linker flags
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${TORCH_LINKER_FLAGS}")
+
+    elseif(APPLE)
+        message(STATUS "Downloading libtorch for MacOS...")
+
+        # Download x86 libtorch here (ROCm and CUDA are not supported):
+        # https://download.pytorch.org/libtorch/cpu/libtorch-macos-x86_64-2.2.1.zip
+        # Download arm64 libtorch here (ROCm and CUDA are not supported):
+        # https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-2.2.1.zip
+
+
+        if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+            set(TORCH_FILE libtorch-macos-arm64-${TORCH_VERSION}.zip)
+            message(STATUS "Detected: Apple ARM architecture.")
+                    file(DOWNLOAD
+                        https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-${TORCH_VERSION}.zip
+                        ${CMAKE_BINARY_DIR}/${TORCH_FILE}
+                        SHOW_PROGRESS
+                        )
+        else()
+            set(TORCH_FILE libtorch-macos-x86_64-${TORCH_VERSION}.zip)
+            message(STATUS "Detected: Apple INTEL architecture.")
+
+            file(DOWNLOAD
+                https://download.pytorch.org/libtorch/cpu/libtorch-macos-x86_64-${TORCH_VERSION}.zip
+                ${CMAKE_BINARY_DIR}/${TORCH_FILE}
+                SHOW_PROGRESS
+                )
+
+
+        endif()
+
+
+
+
+        # Create the directory if it does not exist
+        if(NOT EXISTS "${LIBTORCH_INSTALL_DIR}")
+            file(MAKE_DIRECTORY "${LIBTORCH_INSTALL_DIR}")
+        endif()
+
+        # Extract the zip file
+        execute_process(COMMAND unzip -q ${TORCH_FILE} -d "${LIBTORCH_INSTALL_DIR}"
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                )
+
+        # Add Torch to the include directories
+        include_directories(${TORCH_INCLUDE_DIRS})
+    else()
+        message(STATUS "Downloading libtorch for Linux...")
+        # https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-2.1.2%2Bcpu.zip
+        set(TORCH_FILE libtorch-shared-with-deps-${TORCH_VERSION}%2Bcpu.zip)
+        file(DOWNLOAD
+                https://download.pytorch.org/libtorch/cpu/${TORCH_FILE}
+                ${CMAKE_BINARY_DIR}/${TORCH_FILE}
+                SHOW_PROGRESS
+                )
+
+        # Create the directory if it does not exist
+        if(NOT EXISTS "${LIBTORCH_INSTALL_DIR}")
+            file(MAKE_DIRECTORY "${LIBTORCH_INSTALL_DIR}")
+        endif()
+
+        # Extract the zip file
+        execute_process(COMMAND unzip -q ${TORCH_FILE} -d "${LIBTORCH_INSTALL_DIR}"
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                )
+
+        # Add Torch to the include directories
+        include_directories(${TORCH_INCLUDE_DIRS})
+
+
+
+
+    endif()
+
+    set(CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR}/libtorch)
+endif()
+
+
+
+# Include the libtorch setup file
+#include(libtorch_setup.cmake)
+
+
+
+target_compile_definitions(${BaseTargetName}
+        PUBLIC
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CURL=0
+        JUCE_VST3_CAN_REPLACE_VST2=0)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+
+if (MSVC)
+    file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+    add_custom_command(TARGET ${BaseTargetName}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${TORCH_DLLS}
+            $<TARGET_FILE_DIR:${BaseTargetName}>)
+endif()
+
+target_link_libraries(${BaseTargetName} PRIVATE
+        shared_plugin_helpers
+        juce_recommended_config_flags
+        juce_recommended_lto_flags
+        juce_recommended_warning_flags
+        ${TORCH_LIBRARIES}
+        )
+
+# Add libtorch headers to the include directories
+target_include_directories(${BaseTargetName} PRIVATE "${TORCH_INCLUDE_DIRS}")
+
+
+# Copying the TorchScripts directory and all its contents
+if(WIN32)
+    file(COPY "${CMAKE_SOURCE_DIR}/TorchScripts" DESTINATION "C:/${BaseTargetName}")
+    set(TARGET_DIR "C:\\${BaseTargetName}")
+    add_definitions(-DDEFAULT_MODEL_DIR="C:\\${BaseTargetName}\\TorchScripts\\Models")
+    add_definitions(-DDEFAULT_PROCESSING_SCRIPTS_DIR="C:\\${BaseTargetName}\\TorchScripts\\ProcessingScripts")
+    set(DEFAULT_PRESET_DIR "C:\\${BaseTargetName}\\Presets")
+    add_definitions(-DDEFAULT_PRESET_DIR="C:\\${BaseTargetName}\\Presets")
+    message(STATUS "BaseTargetName (Windows): ${BaseTargetName}")
+    # create a directory for the json settings file called "GUI", move the settings file there
+    file(MAKE_DIRECTORY "C:\\${BaseTargetName}\\GUI")
+    file(COPY "${CMAKE_SOURCE_DIR}/PluginCode/settings.json" DESTINATION "C:\\${BaseTargetName}\\GUI")
+
+    # Provide a path to settings.json file
+    # Define DEFAULT_SETTINGS_FILE_PATH
+    set(DEFAULT_SETTINGS_PATH "${TARGET_DIR}\\GUI\\settings.json")
+    message(STATUS "DEFAULT_SETTINGS_PATH: ${DEFAULT_SETTINGS_PATH}")
+
+    # move the entire PluginCode/img directory to GUI/img (the img directory exists
+    # in the PluginCode directory)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/PluginCode/img")
+        file(COPY "${CMAKE_SOURCE_DIR}/PluginCode/img" DESTINATION "C:\\${BaseTargetName}\\GUI")
+    endif()
+
+    # move all files in the Source/Images directory to GUI/img as well
+    if(EXISTS "${CMAKE_SOURCE_DIR}/Source/Images")
+        file(GLOB_RECURSE IMAGES "${CMAKE_SOURCE_DIR}/Source/Images/*")
+        foreach(IMAGE ${IMAGES})
+            file(COPY ${IMAGE} DESTINATION "C:\\${BaseTargetName}\\GUI\\img")
+        endforeach()
+    endif()
+
+    # provide a path to the image directory
+    add_definitions(-DDEFAULT_IMG_DIR="C:\\${BaseTargetName}\\GUI\\img")
+
+    # No need for platform-specific path formatting
+    add_definitions(-DDEFAULT_SETTINGS_FILE_PATH="C:/${BaseTargetName}/GUI/settings.json")
+
+    # print DEFAULT_IMG_DIR
+    message(STATUS "Images are located in: C:/${BaseTargetName}/GUI/img")
+
+
+elseif(APPLE OR UNIX)
+    set(TARGET_DIR "$ENV{HOME}/Library/${BaseTargetName}")
+    file(COPY "${CMAKE_SOURCE_DIR}/TorchScripts" DESTINATION "${TARGET_DIR}")
+    add_definitions(-DDEFAULT_MODEL_DIR="${TARGET_DIR}/TorchScripts/Models")
+    add_definitions(-DDEFAULT_PROCESSING_SCRIPTS_DIR="${TARGET_DIR}/TorchScripts/ProcessingScripts")
+    set(DEFAULT_PRESET_DIR "${TARGET_DIR}/Presets")
+    add_definitions(-DDEFAULT_PRESET_DIR="${TARGET_DIR}/Presets")
+    message(STATUS "BaseTargetName (MacOS): ${BaseTargetName}")
+    # create a directory for the json settings file called "GUI", move the settings file there
+    file(MAKE_DIRECTORY "${TARGET_DIR}/GUI")
+    file(COPY "${CMAKE_SOURCE_DIR}/PluginCode/settings.json" DESTINATION "${TARGET_DIR}/GUI")
+
+    # Provide a path to settings.json file
+    # Define DEFAULT_SETTINGS_FILE_PATH
+    set(DEFAULT_SETTINGS_PATH "${TARGET_DIR}/GUI/settings.json")
+    message(STATUS "DEFAULT_SETTINGS_PATH: ${DEFAULT_SETTINGS_PATH}")
+
+    # move the entire PluginCode/img directory to GUI/img
+    if(EXISTS "${CMAKE_SOURCE_DIR}/PluginCode/img")
+        file(COPY "${CMAKE_SOURCE_DIR}/PluginCode/img" DESTINATION "${TARGET_DIR}/GUI")
+    endif()
+
+    # move all files in the Source/Images directory to GUI/img as well
+    if(EXISTS "${CMAKE_SOURCE_DIR}/Source/Images")
+        file(GLOB_RECURSE IMAGES "${CMAKE_SOURCE_DIR}/Source/Images/*")
+        foreach(IMAGE ${IMAGES})
+            file(COPY ${IMAGE} DESTINATION "${TARGET_DIR}/GUI/img")
+            message(STATUS "Copying ${IMAGE} to ${TARGET_DIR}/GUI/img")
+        endforeach()
+    endif()
+
+    # provide a path to the image directory
+    add_definitions(-DDEFAULT_IMG_DIR="${TARGET_DIR}/GUI/img")
+
+    # print DEFAULT_IMG_DIR
+    message(STATUS "Images are located in: ${TARGET_DIR}/GUI/img")
+
+    # No need for platform-specific path formatting
+    add_definitions(-DDEFAULT_SETTINGS_FILE_PATH="${DEFAULT_SETTINGS_PATH}")
+
+endif()
+
+# Create PRESET_DIR if it does not exist
+if(NOT EXISTS "${DEFAULT_PRESET_DIR}")
+    # print message
+    message(STATUS "Creating Preset Directory...")
+    file(MAKE_DIRECTORY "${DEFAULT_PRESET_DIR}")
+endif()
+
+message(STATUS "Preset Directory: ${DEFAULT_PRESET_DIR}")
+message(STATUS "BaseTargetName: ${BaseTargetName}")
+message(STATUS "Target Directory: ${TARGET_DIR}")
