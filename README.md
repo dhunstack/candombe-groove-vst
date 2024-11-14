@@ -10,6 +10,15 @@ HumanizeCandombe VST is a JUCE-based audio plugin project designed to add human-
   <img src="./images/pluginInterface.png" alt="Plugin Interface" width="500"/>
 </p>
 
+## Demo
+
+A complete video demonstration of the plugin usage and performance can be found below:
+
+<a href="https://youtu.be/HBgQ2H2ZnPA">
+  <img src="https://img.youtube.com/vi/HBgQ2H2ZnPA/hqdefault.jpg" alt="Video Thumbnail" width="400"/>
+</a>
+
+Note: Made using Ableton Live 12 running on Mac (Intel) OS Ventura
 
 ## Features
 
@@ -52,13 +61,3 @@ This should automatically download JUCE and Torchlib, and the plugin should be a
 <p align="center">
   <img src="./images/walkthrough.gif" alt="Walkthrough" width="600"/>
 </p>
-
-## Demo
-
-A complete video demonstration of the plugin usage and performance can be found below:
-
-<a href="https://youtu.be/HBgQ2H2ZnPA">
-  <img src="https://img.youtube.com/vi/HBgQ2H2ZnPA/hqdefault.jpg" alt="Video Thumbnail" width="400"/>
-</a>
-
-Note: Made using Ableton Live 12 running on Mac (Intel) OS Ventura
