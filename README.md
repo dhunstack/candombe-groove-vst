@@ -20,6 +20,8 @@ A complete video demonstration of the plugin usage and performance can be found 
 
 Note: Made using Ableton Live 12 running on Mac (Intel) OS Ventura
 
+Check out our track [Midnight in Montevideo](https://soundcloud.com/styjt-prbhu/midnight-in-montevideo) on SoundCloud!
+
 ## Features
 
 - **MIDI Processing**: Processes MIDI input to add human-like variations.
