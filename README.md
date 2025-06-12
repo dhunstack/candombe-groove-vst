@@ -63,3 +63,16 @@ This should automatically download JUCE and Torchlib, and the plugin should be a
 <p align="center">
   <img src="./images/walkthrough.gif" alt="Walkthrough" width="600"/>
 </p>
+
+## Citation
+
+If you want to cite our plugin, please cite the paper published at ICMC 2025:
+```
+@inproceedings{mishra2025microrhythm,
+  author    = {Anmol Mishra and Satyajeet Prabhu and Behzad Haki and Martín Rocamora},
+  title     = {Learning Microrhythm in Uruguayan Candombe using Transformers},
+  booktitle = {Proceedings of the International Computer Music Conference (ICMC)},
+  year      = {2025},
+  address   = {Boston, USA}
+}
+```
